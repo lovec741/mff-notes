@@ -12,8 +12,8 @@
 - **jas** = střední hodnota světlostních hodnot
 - **kontrast** = rozptyl světlostních hodnot
 	- POZN: Rozptyl = střední hodnota kvadrátů odchylek
-		- odchylku od střední hodnoty, která má stejný rozměr jako náhodná veličina, zachycuje směrodatná odchylka ($\sigma$) $$\sigma ^{2}=\sum _{i=1}^{n}{\left[x_{i}-E (X)\right]^{2}p_{i}}$$
-		- pokud je pravděpodobnost všech hodnot stejná, pak platí $$\sigma^2 = \frac{1}{n}\sum _{i=1}^{n}{\left[x_{i}-E (X)\right]^{2}}$$
+		- odchylku od střední hodnoty, která má stejný rozměr jako náhodná veličina, zachycuje směrodatná odchylka ($\sigma$) $$\sigma ^{2}=\sum \_{i=1}^{n}{\left[x\_{i}-E (X)\right]^{2}p\_{i}}$$
+		- pokud je pravděpodobnost všech hodnot stejná, pak platí $$\sigma^2 = \frac{1}{n}\sum \_{i=1}^{n}{\left[x\_{i}-E (X)\right]^{2}}$$
 - **histogram** = ukazuje nám množství světlostních hodnot na jednotlivých úrovních
 	- říká jen kolik ale ne kde
 - **aplikování**:
@@ -187,7 +187,7 @@
 #### Detektory hran
 <img src="attachments/Pasted image 20260119195608.png" width="300px">
 
-- gradient obrázku - ukazuje ve směru nejrychlejší změny intenzity$$ \nabla f = \left[ \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right]$$
+- gradient obrázku - ukazuje ve směru nejrychlejší změny intenzity $$\nabla f = \left[ \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right]$$
 	- <img src="attachments/Pasted image 20260119200010.png">
 - **založené na 1. derivaci**
 	- aproximují první derivaci - detekují jak moc se nám mění intenzita v jednom směru
@@ -263,7 +263,7 @@
 - **simplified space variant blur model**
 	- v něm se předpokládá, že se velikost masky nemění (pro zjednodušení)
 		- např. plochá scéna, konstantní pohyb
-	- Fancy vzoreček: $$z(x) = [h \ast u](x)+n(x)$$
+	- Fancy vzoreček: $$z(x) = \[h \ast u\](x)+n(x)$$
 	- $\ast$ operátor konvoluce
 	- $u(x)$ je původní (čistý) obrázek
 	- $n(x)$ je aditivní šum

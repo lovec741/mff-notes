@@ -4,6 +4,7 @@ Moje zápisky z přednášky.
 - malinko vyšperkované obrázky z prezentací a netu - obrázky nevlastním!!!
 - některé matematické termíny dopsány z netu
 - snaha rozdělit do kategorií i když to občas nebylo z přednášky
+- github renderování bohužel některé formulky rozbilo :(
 
 Zápisky jsou z toho co bylo na přednášce což ne vždy odpovídá v pořadí a v obsahu k tomu co je v online prezentacích. Detailněji níže.
 

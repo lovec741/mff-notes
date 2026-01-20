@@ -94,19 +94,19 @@
 	- je lineární
 		- říká: zvětšení nebo sečtení hodnot v obrazové oblasti odpovídá tomu stejnému ve frekvenční
 	- konvoluční
-		- $$F[f]F[g] = F[f\ast g]$$
+		- $F[f]F[g] = F[f\ast g]$
 			- kde nalevo máme normální násobení v oblasti frekvenční
 			- a napravo máme konvoluci v oblasti např obrazové/časové
 		- říká: násobení v oblasti frekvenční je stejné jako konvoluce v oblasti obrazové/časové
 		- POZN: počítání konvoluce je pomalé, ale násobení je rychlé, takže se může hodit pro zrychlení algoritmů
 	- shift
-		- $$F[f(x-a)](k) = e^{-2\pi ika}F[f](k)$$
+		- $F\[f(x-a)\](k) = e^{-2\pi ika}F\[f\](k)$
 		- říká: posunutí v oblasti obrazové nezmění frekvenční oblast
 	- rotační
-		- $$F[R(f)] = R(F[f])$$
+		- $F[R(f)] = R(F[f])$
 		- říká: pokud zrotujeme obrazovou oblast zrotuje se i frekvenční
 	- scaling
-		- $$F[f(ax)](k) = |a|^{-1}F(\frac{k}{a})$$
+		- $F\[f(ax)\](k) = |a|^{-1}F(\frac{k}{a})$
 		- říká: pokud zvětšujeme obrazovou oblast , pak se frekvenční zmenšuje a naopak
 - POZN: konvoluční a shift teorém platí jen pro periodické prodloužení
 	- (lepíme ten obrázek opakovaně vedle sebe)
