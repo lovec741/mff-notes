@@ -11,14 +11,16 @@
 	- obrazová oblast
 		- naši funkci pronásobíme polem delta funkcí (značíme $s$) - Diracův hřeben 
 	- frekvenční oblast
-		- v mřížce opakujeme celé spektrum - spektrum musí být středově souměrné <img src="attachments/Pasted image 20260119164002.png" width="300px">
+		- v mřížce opakujeme celé spektrum - spektrum musí být středově souměrné
+		- <img src="attachments/Pasted image 20260119164002.png" width="300px">
 		- získat zpátky obrázek znamená vyříznout jedno to spektrum a udělat fourierku - tohle v praxi nejde ale je to jen myšlenkový koncept
 			- nyquistova podmínka (nyquistovi nerovnosti)
 				- do kdy můžeme vzorkovat, bez toho abychom ztratily informace
-					- aby se nám nezačali spektra překrývat (jejich bounding boxy)$$\Delta x \leq \frac{1}{2W_u},\quad\Delta y \leq \frac{1}{2W_v}$$
+					- aby se nám nezačali spektra překrývat (jejich bounding boxy) $$\Delta x \leq \frac{1}{2W_u},\quad\Delta y \leq \frac{1}{2W_v}$$
 					- pokud se toto stane tak nastane aliasing (např kvůli nedostatečnou frekvencí vzorkování)
-						- to pak tvoří **Moiré efekt!
-							- falešné nízké frekvence<img src="attachments/Pasted image 20260119163508.png">
+						- to pak tvoří **Moiré efekt!**
+							- falešné nízké frekvence
+								- <img src="attachments/Pasted image 20260119163508.png">
 								- může způsobit že třeba kola se točí ve filmu opačným směrem, nebo že cirkulárka pod žárovkou vypadá že stojí
 								- využití - námořní navigace
 							- řešení - anti-aliasing
@@ -41,7 +43,8 @@
 	- rozmístění kvantovacích prahů
 		- v praxi jsou většinou rovnoměrně
 		- existuje i logaritmické kvantování
-- kvantizační šum (falešné kvantovací hrany) <img src="attachments/Pasted image 20260119163638.png" width="400px">
+- kvantizační šum (falešné kvantovací hrany)
+	- <img src="attachments/Pasted image 20260119163638.png" width="400px">
 	- tyto hrany jsou nerozeznatelné od reálných
 - pokud optimalizujeme poměr vzorkovací frekvence k počtu kvantovacích hladin aby vypadal co nejlépe
 	- pokud obrázek je detailní (má převážně vysoké frekvence) -> důležitější je vzorkovací frekvence

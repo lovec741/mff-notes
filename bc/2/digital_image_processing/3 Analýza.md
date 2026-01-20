@@ -23,7 +23,7 @@
 			- snažíme se aby byly různé skupiny malé a daleko od sebe
 				- najdeme střední hodnoty skupin $m_1$ a $m_2$
 				- a variace skupin $\sigma_1$ a $\sigma_2$
-				- určíme míru separability:$$max \frac{(m_1-m_2)^2}{\sigma_1^2+\sigma_2^2}$$
+				- určíme míru separability: $$max \frac{(m_1-m_2)^2}{\sigma_1^2+\sigma_2^2}$$
 	- **region growing**
 		- začneme v seed bodu (manuálně vybrané)
 		- na základě vyhledávacího algoritmu a podmínky homogennosti se rozroste do okolních pixelů
@@ -100,7 +100,8 @@
 					- 3. najde množinu lokálních maxim
 					- 4. množinu vyčistí - **preferuje rohy a průsečíky**, zahodí body kde je malý kontrast s okolím nebo jsou na hraně
 					- 5. spočítá gradienty v okolí, ale nepracuje s nimi přímo, spočítá z nich histogram (na 4 kvadrantech v okolí) - je rotačně invariantní!
-						- tomuhle histogramu se říká "HoG" - histogram of gradients<img src="attachments/Pasted image 20260120083026.png">
+						- tomuhle histogramu se říká "HoG" - histogram of gradients
+						- <img src="attachments/Pasted image 20260120083026.png">
 				- je velmi dobrý, umí detekovat objekty, které vidíme jen z části - je lokální
 				- selže když jeden z obrázků je rozmazaný, je tam šum, nebo se tam něco opakuje na více místech
 		- **příznaky moment invariants**

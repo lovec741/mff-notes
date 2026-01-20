@@ -11,4 +11,4 @@ Bakalář:
     - NSWI141 Úvod do počítačových sítí - [Zpracované hlavičky otázek 2024](https://github.com/petrroll/mff-stuff/blob/master/site/site_2024.md) (Mimo tento repoozitář)
         - [Jednoduchá kvízová aplikace využívající zpracované hlavičky](https://lovec741.github.io/mff-stuff/site/quiz_webapp.html)
 2. ročník
-    - NPGR002 Digitální zpracování obrazu - [Zápisky z přednášek]()
+    - NPGR002 Digitální zpracování obrazu - [Zápisky z přednášek](bc/2/digital_image_processing)

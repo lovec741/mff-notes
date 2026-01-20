@@ -12,7 +12,7 @@
 - **jas** = střední hodnota světlostních hodnot
 - **kontrast** = rozptyl světlostních hodnot
 	- POZN: Rozptyl = střední hodnota kvadrátů odchylek
-		- odchylku od střední hodnoty, která má stejný rozměr jako náhodná veličina, zachycuje směrodatná odchylka ($\sigma$)$$\sigma ^{2}=\sum _{i=1}^{n}{\left[x_{i}-E (X)\right]^{2}p_{i}}$$
+		- odchylku od střední hodnoty, která má stejný rozměr jako náhodná veličina, zachycuje směrodatná odchylka ($\sigma$) $$\sigma ^{2}=\sum _{i=1}^{n}{\left[x_{i}-E (X)\right]^{2}p_{i}}$$
 		- pokud je pravděpodobnost všech hodnot stejná, pak platí $$\sigma^2 = \frac{1}{n}\sum _{i=1}^{n}{\left[x_{i}-E (X)\right]^{2}}$$
 - **histogram** = ukazuje nám množství světlostních hodnot na jednotlivých úrovních
 	- říká jen kolik ale ne kde
@@ -155,7 +155,7 @@
 	- takhle se to v digitálním zpracování již nedělá
 	- neostré maskování - Laplace
 		- POZN: tady není nic neostrého, je to jen z toho co se dělalo ve fotokomoře
-		- Laplace operátor - využijeme že podobného efektu dosáhneme druhou derivací:$$\nabla^2 f = \frac{\partial^2 f}{\partial x^2}+\frac{\partial^2 f}{\partial y^2}$$
+		- Laplace operátor - využijeme že podobného efektu dosáhneme druhou derivací: $$\nabla^2 f = \frac{\partial^2 f}{\partial x^2}+\frac{\partial^2 f}{\partial y^2}$$
 			- $\nabla^2f$ jsou hrany / detaily 
 			- Odečteme jako při unsharp masking: $f - \alpha \nabla^2 f$
 		- numericky
@@ -187,10 +187,12 @@
 #### Detektory hran
 <img src="attachments/Pasted image 20260119195608.png" width="300px">
 
-- gradient obrázku - ukazuje ve směru nejrychlejší změny intenzity$$\nabla f = \left[ \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right]$$<img src="attachments/Pasted image 20260119200010.png">
+- gradient obrázku - ukazuje ve směru nejrychlejší změny intenzity$$ \nabla f = \left[ \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right]$$
+	- <img src="attachments/Pasted image 20260119200010.png">
 - **založené na 1. derivaci**
 	- aproximují první derivaci - detekují jak moc se nám mění intenzita v jednom směru
-	- velký problém s šumem - 1. derivace ho zveličí<img src="attachments/Pasted image 20260119194815.png" width="300px">
+	- velký problém s šumem - 1. derivace ho zveličí
+	- <img src="attachments/Pasted image 20260119194815.png" width="300px">
 	- hledáme maxima
 	- **ROBERTS**
 		- 2 masky
@@ -225,7 +227,8 @@
 - **založené na 2. derivaci**
 	- hledáme přechody z vysokých do nízkých hodnot - zero crossing
 	- ještě větší problém se šumem (nelze bez potlačení!)
-	- **MARR**<img src="attachments/Pasted image 20260119200330.png">
+	- **MARR**
+		- <img src="attachments/Pasted image 20260119200330.png">
 		- použijeme zase gauss (rozmažeme)
 			- laplace z gaussovky (LoG) - najdeme gradienty
 		- parametry jsou velikost gaussovky (sigma)
@@ -260,7 +263,7 @@
 - **simplified space variant blur model**
 	- v něm se předpokládá, že se velikost masky nemění (pro zjednodušení)
 		- např. plochá scéna, konstantní pohyb
-	- Fancy vzoreček:$$z(x) = [h \ast u](x)+n(x)$$
+	- Fancy vzoreček: $$z(x) = [h \ast u](x)+n(x)$$
 	- $\ast$ operátor konvoluce
 	- $u(x)$ je původní (čistý) obrázek
 	- $n(x)$ je aditivní šum
@@ -281,7 +284,8 @@
 	- v praxi
 		- nejspíš neznáme přesně ani PSF a je tam šum
 		- i kdyby tomu tak nebylo tak bychom stejně neměli jednoznačně dané uzávorkování toho rozmazání (v jakém pořadí k němu došlo)
-			- i kdyby jsme je našli přesně, tak nemůžeme matematicky najít jaký je rozptyl při dekonvoluci (vědět kdy se zastavit)<img src="attachments/Pasted image 20260119203827.png">
+			- i kdyby jsme je našli přesně, tak nemůžeme matematicky najít jaký je rozptyl při dekonvoluci (vědět kdy se zastavit)
+				- <img src="attachments/Pasted image 20260119203827.png">
 				- musíme si tam přidat naše preference (to ale nemusí být ten skutečný obrázek)
 					- ty budou záležet na tom co víme jistě viz. kategorie
 #### Restoration categories 
@@ -292,7 +296,8 @@
 				- minimalizujeme rozdíl od modelu
 	- se šumem
 		- $G = F\times H + N$
-		- Pokud provodeme inverzní Fourierku: $F^{-1}(G/H + G/N)$<img src="attachments/Pasted image 20260119204609.png">
+		- Pokud provodeme inverzní Fourierku: $F^{-1}(G/H + G/N)$
+			- <img src="attachments/Pasted image 20260119204609.png">
 			- akorát zvýrazníme ten šum
 		- **Wiener filter**
 			- Cílem je tato minimalizace: $E(||f' - f||^2) \rightarrow min$ 
@@ -348,7 +353,8 @@
 - místo toho abychom měli jednu rovnici s dvěma proměnnými, tak máme k rovnic s k+1 proměnnými (problém je lépe určen)
 - **čím větší rozdíly mezi PSF jednotlivých kanálů (obrázků) tím lepší výsledek**
 - **musíme zajistit, že obrázky jsou registrované**
-	- chytrý krok - přesuneme tu transformaci do toho PSF<img src="attachments/Pasted image 20260119225732.png" width="400px">
+	- chytrý krok - přesuneme tu transformaci do toho PSF
+		- <img src="attachments/Pasted image 20260119225732.png" width="400px">
 		- hledáme umístění toho PSF ve větší matici
 			- metoda si s tím už poradí (nemusíme ty velké PSF srovnávat přes sebe a extrahovat posunutí)
 - **multi-focus fusion**
@@ -441,17 +447,17 @@
 						- je mnohem **rychlejší**
 					- postup 
 						- uděláme whitening na obrázky a hledáme korelaci
-						- nebo lépe **nalezneme cross-power spectrum**$$\frac{F.G^*}{|F.G|} = e^{+2\pi i n a}$$
+						- nebo lépe **nalezneme cross-power spectrum** $$\frac{F.G^*}{|F.G|} = e^{+2\pi i n a}$$
 							- $^*$ je komplexně sdružené číslo 
 							- $a,b$ jsou parametry posunu (ty neznáme)
 							- $F$, $G$ fourierky obou oken (toho, kterým posouváme a toho na které ho pokládáme)
 								- $g(x) = f(x-a)$
 								- $G=F.e^{-2\pi i n a}$ ... shift teorém - předpokládáme že okna se liší jen o posun
-								- $G^*=F^*.e^{+2\pi i n a}$ ... všimněme si že po komplexním sdružením má komplexní jednička kladný exponent
+								- $G^\*=F^\*.e^{+2\pi i n a}$ ... všimněme si že po komplexním sdružením má komplexní jednička kladný exponent
 								- $|G|=|F|$ ... rozdíl jen v násobení komplexní jedničkou
 									- -> $|F|.|G| = |F|^2$
 								- Proč tam je to komplexní sdružení?
-									- $F.G^*=F.F^*.e^{+2\pi i n a}=|F|^2.e^{+2\pi i n a}$ ... dostaneme komplexní jedničku, která přímo kóduje posun
+									- $F.G^\*=F.F^\*.e^{+2\pi i n a}=|F|^2.e^{+2\pi i n a}$ ... dostaneme komplexní jedničku, která přímo kóduje posun
 								- => vidíme že se nám nahoře a dole vykrátí $|F|^2$ a zbude $e^{+2\pi i n a}$
 							- máme $e^{2\pi i n a}$ a víme že **její inverzní fourierka bude delta funkce** $\delta(x-a)$ 
 					- může být horší pokud obrázky jsou ze single modality a je tam málo hran, tak narazíme na to že jsme zahodili ty barvy
@@ -480,7 +486,8 @@
 				- **kombinatorické** - využívá jen globální informace
 					- vyzkoušíme všechny dvojce bodů - v praxi jen podgraf, protože by to jinak bylo pomalé 
 					- počítání zásahů - koukáme se jak dobře se pak ostatní promítnou na nějaký bod v druhém obrázku
-					- parametr clustering<img src="attachments/Pasted image 20260120072501.png" width="400px">
+					- parametr clustering
+					- <img src="attachments/Pasted image 20260120072501.png" width="400px">
 						- dvojicím bodů přiřadíme bod v prostoru parametrů (více dimenzí - dimenze pro rotaci, scale, shift)
 						- v místě kde parametry sedí bude v prostoru parametrů kluster
 				- **feature space** - využívá jen lokální informace
@@ -491,7 +498,8 @@
 						- výrazné, aby se s velkou pravděpodobností ukázalo v obou
 						- odolné vůči šumu
 					- robustní matching
-						- nebrat jen min distance, ale taky jestli není blízko více bodů -potom tam je velká šance se splést<img src="attachments/Pasted image 20260120073258.png">
+						- nebrat jen min distance, ale taky jestli není blízko více bodů -potom tam je velká šance se splést
+						- <img src="attachments/Pasted image 20260120073258.png">
 							- pokud je blízko více bodů je vysoká nejistota a vybereme radši jiný
 				- **hybridní**
 					- krok1 - najdeme dvojice invariantních příznaků - vybereme jen ty nejspolehlivější!
@@ -501,7 +509,7 @@
 	- design mapovacích funkcí
 		- globální - podobnost, afinní, projektivní transformace
 			- afinní transformační model
-				- afinní geometrie$$u=a_0+a_1x+a_2y, v=b_0+b_1x+b_2y$$ $$u=s(x\cos \psi - y \sin\phi)+\Delta x$$$$v=s(x\sin \psi + y \cos\phi)+\Delta y$$ 
+				- afinní geometrie $$u=a_0+a_1x+a_2y, v=b_0+b_1x+b_2y$$ $$u=s(x\cos \psi - y \sin\phi)+\Delta x$$ $$v=s(x\sin \psi + y \cos\phi)+\Delta y$$ 
 					- kde s je scale, $\psi$ je rotace a $\Delta x, \Delta y$ je posun
 					- $s\cos \psi = a, \quad s\sin \psi = b$
 				- umožňuje neisotropní scaling - zvlášť scale v jednom směru
@@ -518,7 +526,8 @@
 				- pro určení jednoznačně potřebujeme 4 body (8 parametrů)
 				- také zachovává přímky!
 		- lokální 
-			- nejjednodušší - triangulace na řídících bodech, každý se přetransformuje zvlášť lineání transformací - **piecewise affine**<img src="attachments/Pasted image 20260120075409.png" width="right|200px">
+			- nejjednodušší - triangulace na řídících bodech, každý se přetransformuje zvlášť lineání transformací - **piecewise affine**
+				- <img src="attachments/Pasted image 20260120075409.png" width="right|200px">
 				- s lineární transformací jsou ale problémy, protože láme na kraji mezi trojúhelníky rohy
 			- místo toho použijeme něco co jsme schopni omezit aby to na krajích navazovalo - **piecewise cubic**
 			- **thin-plate splines**
@@ -526,7 +535,8 @@
 4. **image resampling and transformation**
 	- vypadá jednoduše, ale výpočetně zabírá i třeba 95% času
 		- čím složitější transformační model o to pomalejší
-	- interpolace z neceločíselných souřadnic na celočíselné<img src="attachments/Pasted image 20260120075821.png" width="400px">
+	- interpolace z neceločíselných souřadnic na celočíselné
+		- <img src="attachments/Pasted image 20260120075821.png" width="400px">
 		- nearest neighbor
 		- bilinear
 		- bicubic
