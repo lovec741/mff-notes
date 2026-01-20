@@ -15,7 +15,7 @@ Zápisky jsou z toho co bylo na přednášce což ne vždy odpovídá v pořadí
     - Prezentace: 01-Motivation+mathematical background
 1. [Digitalizace](1%20Digitalizace.md)
     - Prezentace: 02-Sampling and quantization
-2. [Předzpracování (preprocessing)](2%20Předzpracování%20(preprocessing))
+2. [Předzpracování (preprocessing)](2%20Předzpracování%20(preprocessing).md)
     - Prezentace: (v tomto pořadí)
         - 03-Histogram, brightness and contrast 
         - 04-Noise suppression
