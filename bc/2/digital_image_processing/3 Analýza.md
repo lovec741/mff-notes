@@ -1,0 +1,171 @@
+# Analýza
+## Rozpoznávání
+- výstupem nemusí být obraz, většinou je to bod v příznakovém prostoru
+	- metrický prostor (většinou se dá popsat jako vážená eukleidovská metrika)
+- 2D objekt
+	- je binární - jsme pro každý pixel schopni říct zda tam je nebo ne
+	- konečný
+	- má okraj
+- neighbor pixel - v praxi se používají 2 definice:
+	- okolní 4 pixely, okolních 8 pixelů (jsou tam i diagonální)
+	- říká jakou topologii využíváme - ovlivňuje co je objekt?
+		- je diagonální řada pixelů více objektů nebo jen jeden
+- co je objekt?
+	- objekt je shluk pixelů které spolu sousedí a spojuje je nějaká homogenní vlastnost
+		- nelze korektně matematicky popsat - neexistuje správná segmentace, testuje se pomocí manuálně anotovaných dat
+- **jednoduché metody**
+	- **prahování** (thresholding)
+		- podle světlosti
+		- funguje pro obrázky které jsou v principu binární
+		- např. černý text na bílém papíře
+		- jak z histogramu určit optimální práh?
+			- vybrat minimum mezi peaky (po vyhlazení) není optimální!
+			- snažíme se aby byly různé skupiny malé a daleko od sebe
+				- najdeme střední hodnoty skupin $m_1$ a $m_2$
+				- a variace skupin $\sigma_1$ a $\sigma_2$
+				- určíme míru separability:$$max \frac{(m_1-m_2)^2}{\sigma_1^2+\sigma_2^2}$$
+	- **region growing**
+		- začneme v seed bodu (manuálně vybrané)
+		- na základě vyhledávacího algoritmu a podmínky homogennosti se rozroste do okolních pixelů
+			- vyhledávací algoritmy jsou stejné jako vyplňování oblasti v grafice (např. pro floodfill)
+- předzpracování binárních obrázků
+	- Morfologie
+		- strukturní element - na slidu je to B
+			- často se využívá kruh - např kruh 3x3 (čtverec)
+		- základní operace
+			- eroze - pro každý bod objektu je celý strukturnní element uvnitř
+				- sežere okraj o poloviční velikosti strukturního elementu
+			- dilatace  - přídáme část poloviční velikosti strukturního elementu z venku
+			- uzavření, otevření - způsob jak užavřít malé díry, resp odstranit vyčuhující čáry
+- vlastnosti příznaku
+	- invariant
+		- pro rozdělení do skupin musíme umět najít způsob jak rozlišit různé skupiny
+		- hledáme funkcionál I, který splňuje
+			- f je původní obrázek a D(f) je zdeformovaný obrázek
+			- pro všechny D(f): I(D(f)) = I(f)
+		- **jednoduché příznaky**:
+			- **kompaktnost** - jak je to blízko ke kruhu (1 pro kruh)
+			- **konvexnost**
+			- **elongation** - poměr obdélníku opsaného objektu (1 pro čtverec)
+			- **rectangularity** - jak blízko je obdélníku
+		- **"úplné" příznaky**:
+			- **shape vector**
+				- vychází z **radiální funkce**
+					- <img src="attachments/Pasted image 20260120081703.png" width="200px">
+					- z těžiště vedeme polopřímku (paprsek) směrem ven a změříme v jaké vzdálenosti je kraj objektu
+					- a rotujeme jí dokola
+					- !!! nesmíme použít pro jiné než "hvězdicové objekty" - mají jen jeden průsečík polopřímky s krajem
+					- umožňuje nám převést rotaci na periodický shift!
+						- vezmeme amplitudu jednorozměrné fourierovy transformace
+						- shift nic neovlivňuje, scaling mění amplitudu lineárně -> normalizujeme 
+						- získáme fourierovy deskriptory
+				- navzorkuje radiální funkci
+				- <img src="attachments/Pasted image 20260120081745.png" width="150px">
+				- musíme si uvědomit, že musíme vyzkoušet cyklické shifty
+					- -> není nutné začínat v maximálním vektoru, můžeme začít náhodně
+				- nevyužívá fourierku
+			- **shape matrix**
+				- <img src="attachments/Pasted image 20260120081812.png" width="300px">
+				- podobné shape vector
+				- nepotřebuje radiální funkci, funguje i pro jiné než hvězdicové objekty!
+				- proč ne třeba čtvercová síť orientovaná podle propojení těžiště s nejdelším paprskem?
+					- velice špatně by se pak řešili rotace
+		- **transform coefficient invariants:**
+			- **Fourierovy descriptory** $Z_1 \dots Z_{n-1}$<img src="attachments/Pasted image 20260120083256.png">
+				- nejsou založeny na radiální funkci (protože ta se dá použít jen u hvězdicových objektů!)
+				- převede **hraniční pixely** na posloupnost komplexních čísel a s tím udělá fourierku
+				- **posun** odpovídá přičtení konstanty z k bodům, konstanta je po fourierce delta funkce, takže to **změní jen hodnotu v nule** (ve středu) -> řešení: prostě **zahodíme $Z_0$** =>  $Z_1 \dots Z_{n-1}$
+				- **rotace** v komplexních číslech o úhel $\alpha$ je vynásobení $e^{-i\alpha}$
+					- což je jen komplexní jednička -> prostě vezmeme **konstantní hodnotu**
+					- $|Z_n * e^{-i\alpha}| = |Z_n|$
+					- rotaci z jiného středu dekomponujeme na rotaci, shift na počátek a rotaci 
+				- **scaling** je vynásobení konstantou, proto budeme muset **normalizovat**, to nemůžeme pomocí $Z_0$, protože to jsme zahodili, ale místo toho můžeme použít $Z_1$ $$\frac{|Z_n|}{|Z_1|}$$
+				- Teď už jen nevíme kde začít. Začneme náhodně. Dvě posloupnosti budou mezi sebou mít cyklický shift v koeficientech, ten nám ale nevadí, protože dle shift teorému budou mít stejnou amplitudu (liší se jen o komplexní jedničku) a mi již dříve bereme amplitudu, takže nic dalšího dělat nemusíme
+			- **Radonova transformace**
+				- zase převod rotace na shift
+				- posčítáme pixely v jednotlivých sloupcích pro každou rotaci obrázků
+				- rotace -> cyklický shift
+			- **Curvature scale space**
+				- sleduje co dělají inflexní body při vyhlazování objektu
+					- konkrétně rozvine hranici objektu a sleduje vzdálenosti inflexních bodů (přechod konkávní na konvexní) od sebe (ty nejméně významné zahodí)
+						- zase rotace -> cyklický shift
+				- inflexní body jsou invariantní vůči afinní transformaci
+				- je lokální! (předchozí byly globální)
+					- Změna části objektu ovlivní jen část příznaku!
+		- **lokální invarianty šedotónových obrázků**
+			- **příznak SIFT** (scale invariant feature transform - prý není název moc výstižný)
+				- je mnohakrokový a běží na pyramidové (hierarchické) reprezentaci obrázku
+					- 1. rozmaže ho
+					- 2. odečte od původního -> detekoval hrany
+					- 3. najde množinu lokálních maxim
+					- 4. množinu vyčistí - **preferuje rohy a průsečíky**, zahodí body kde je malý kontrast s okolím nebo jsou na hraně
+					- 5. spočítá gradienty v okolí, ale nepracuje s nimi přímo, spočítá z nich histogram (na 4 kvadrantech v okolí) - je rotačně invariantní!
+						- tomuhle histogramu se říká "HoG" - histogram of gradients<img src="attachments/Pasted image 20260120083026.png">
+				- je velmi dobrý, umí detekovat objekty, které vidíme jen z části - je lokální
+				- selže když jeden z obrázků je rozmazaný, je tam šum, nebo se tam něco opakuje na více místech
+		- **příznaky moment invariants**
+			- nejvíce matematicky rozpracovaný příznak - více než Fourierovy deskriptory
+			- momenty jsou **projekce** obrázku **na nějakou polynomiální bázi**
+			- velká množina příznaků, která má všemožné vlastnosti -  více na přednášce v LS
+			- nejsou velmi robustní vůči nesplnění teoretických předpokladů (méně praktické)
+			- jsou spíše globální (potřebují větší okolí - strany 10+ px)
+## Rozpoznávání (klasifikace)
+- rozdělení příznakového prostoru na přihrádky
+	- jedna přihrádky nesmí odpovídat více třídám (více přihrádek může odpovídat jedné třídě)
+- trénování klasifikátoru = nastavení hranic mezi přihrádkami
+- **handcrafted x learned**
+	- handcrafted = uživatel vytvoří příznaky, jsou pevně dané, např. Fourierovy koeficienty
+		- pokud jsme schopni rozdíly mezi třídami popsat matematicky, handcrafted jsou rychlejší a přesnější
+	- learned = optimalizujeme i přes prostor příznaků, síť vymyslí vlastní příznaky, jsou to nějaká konvoluční jádra
+		- pokud máme generické třídy, které nejsme schopni popsat matematicky, např kočka x pes, pak learned jsou jediná možnost
+- **supervised x unsupervised**
+	- supervised = třídy jsou dané, trénovací obrázky mají označení do které třídy patří
+	- unsupervised (clustering) = třídy určí sama
+- empirická pozorování
+	- rozhodovací hranice není jednoznačně daná daty
+	- snaha 100% oddělit množiny je vadná - overtraining (overfitting)
+	- data nejsou vždy klasifikovaná správně!
+- **klasifikace a rozhodování**
+	- změříme příznaky
+	- klasifikujeme - minimalizujeme chybu klasifikace
+		- musíme zohlednit apriorní pravděpodobnosti - zda jsou nějaká data více častá, konstanta kterou přenásobíme pravděpodobnost tříd, většinou se odhadují z trénovací množiny
+		- můžeme chtít minimalizovat maximální chybu
+	- rozhodnutí - minimalizujeme ztrátovou funkcí
+		- musíme chyby klasifikace vážit ztrátovou funkcí
+	- akce - HW
+- klasifikátory
+	- **deterministické x statistické**
+		- deterministické - když nejsme schopni fitovat normální distribuci, máme málo trénovacích dat (málo a hodně záleží na dimenzi! počet parametrů normální distribuce je $n^2$ kde $n$ je počet dimenzí)
+			- **minimum distance**
+				- k těžišti
+					- špatně se přizpůsobí tvaru množin
+				- k nejbližšímu sousedovy (NN)
+					- outliers jsou problém
+			- **k-NN** (k nearest neighbors)
+				- počítá nejbližší body dokud tam jedna množina není zastoupená $k$ krát (postupně okolí rozšiřuje)
+				- $k$ je uživatelský parametr, malé číslo
+					- vyšší k vyhlazuje hranici
+					- příliš vysoké je overtraining, příliš nízké je citlivé na outliers
+					- k=2 zvládne 1 outlier, k=3 zvládne 2 outlier body u sebe, ...
+			- **lineární klasifikátor**
+				- maximalizuje "margin", vzdálenost mezi oddělovacími nadrovinami - název SVM (support vector machine - support vectory jsou ty body o které se opírají ty nadroviny)
+				- problém jsou zase extremální hodnoty, o ty se nechceme opírat samozřejmě 
+					- řešení: soft margin
+						- maximalizujeme margin + penalizační člen za členy co jsou blbě
+		- statistické klasifikátory
+			- **Bayesian \[bajésův] klasifikátor**
+				- využívá Bayesovo pravidlo $$P(C|X) = \frac{P(X|C).P(C)} {P(X)}$$
+					- příznaky $X$, třída $C$
+					- $P(C|X)$ ... pravděpodobnost, že to je třída C, při příznacích $X$ (posteriorní pravděpodobnost)
+					- $P(X|C)$ ... pravděpodobnost příznaků $X$ ve třídě $C$
+					- $P(C)$ ... pravděpodobnost třídy $C$ (apriorní pravděpodobnost)
+					- $P(X)$ ... pravděpodobnost příznaků $X$ (normalizační člen)
+						- součet přes pravděpodobnosti příznaků $X$ ve všech třídách
+				- podívali jsme se jen na hlavní nápad
+				- předpoklady
+					- příznaky jsou náhodné proměnné
+			- **konvoluční sítě**
+				- jsou unsupervised - samy si tvoří třídy
+				- neumí si poradit s rotacemi (rotace o 30° sníží pst z 95% na 50% = čistá náhoda) a ani s deformacemi
+					- musí se trénovat i na rotovaných a deformovaných datech
+					- => hybridní sítě, equivariant sítě

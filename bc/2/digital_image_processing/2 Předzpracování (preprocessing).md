@@ -1,0 +1,547 @@
+# Předzpracování (preprocessing)
+### Metody
+- image enhancement - snaha aby byl obraz "hezčí"
+- image restoration - snaha aby byl obraz blíže k realitě
+## Image enhancement
+- heuristiky - snaží se aby líp vypadal pro člověka
+- Způsoby:
+	- změny kontrastu a jasu
+	- potlačení šumu
+	- detekce a zvýraznění hran
+### Změny kontrastu a jasu
+- **jas** = střední hodnota světlostních hodnot
+- **kontrast** = rozptyl světlostních hodnot
+	- POZN: Rozptyl = střední hodnota kvadrátů odchylek
+		- odchylku od střední hodnoty, která má stejný rozměr jako náhodná veličina, zachycuje směrodatná odchylka ($\sigma$)$$\sigma ^{2}=\sum _{i=1}^{n}{\left[x_{i}-E (X)\right]^{2}p_{i}}$$
+		- pokud je pravděpodobnost všech hodnot stejná, pak platí $$\sigma^2 = \frac{1}{n}\sum _{i=1}^{n}{\left[x_{i}-E (X)\right]^{2}}$$
+- **histogram** = ukazuje nám množství světlostních hodnot na jednotlivých úrovních
+	- říká jen kolik ale ne kde
+- **aplikování**:
+	- global x local
+	- linear x nonlinear
+	- POZN: u obrázku s vysokým dynamickým rozsahem nám globální úpravy nepomůžou a budeme muset použít lokální úpravy
+- *u zkoušky otázky typu*
+	- *dostaneme transformační funkci co znamená a k čemu by se hodila*
+	- *navrhněte transformační funkci pro x použití*
+- **gama korekce** - podobný efekt jako nerovnoměrné kvantování
+	- dá větší důraz na vyšší / nižší světlostní hodnoty
+		- k tmavšímu (mocnina >1)
+		- k světlejšímu (mocnina 0 až 1)
+- **ekvalizace** - konstantní histogram -> maximálně využijeme všech hladin 
+	- dá se vytvořit pomocí aplikace kumulativního histogramu na obrázek
+	- kumulativní histogram = rostoucí, kumuluje se hodnota jasu (ta černá čára v obrázku níže)
+	- v diskrétním případě nevytvoří skutečně konstantní histogram - nevíme jak štěpit když je hodně pixelů s jednou světlostní hodnotou, takže to způsobí že na jedné hladině bude víc a okolo budou řidší aby se to vykompenzovalo
+	
+	- <img src="attachments/Pasted image 20260119170842.png" width="300px"><img src="attachments/Pasted image 20260119170836.png" width="300px">
+		- hladiny s jednou světlostní hodnotou se "roztáhnou"
+	- na fotkách reálného světa to většinou kvůli barvám nedopadne dobře, na fotkách z družic nebo mikroskopických kde nemáme žádnou představu jak to má vypadat to může fungovat
+	- histogram součtu obrázků = konvoluce jejich histogramů
+### Potlačení šumu
+- **vznik**
+	- background noise - tepelný šum senzoru - additive Gaussian noise
+	- shot noise (photon noise) - multiplicative Gaussian noise
+	- random error of A/D converter, přenosové chyby - impulse noise 
+- celkem - tzv compound noise
+	- modelujeme jako additive Gaussian
+- **typy**
+	- Aditivní náhodný šum 
+		- $g=f+n$
+	- Aditivní gaussovský bílý šum (`AGWN` - additive Gaussian white noise)
+		- důležitá vlastnost je nekorelovanost pixelů na sobě navzájem
+			- když uděláme cross korelaci obrázku šumu samo se sebou tak budeme mít všude nuly kromě středu kde bude $\sigma^2$ , pomocí FT dostaneme $\sigma^2$
+			- amplituda spektra na druhou je konstantní a rovná se $\sigma^2$
+		- white noise = šum na jednom pixelu nezávisí na ostatních 
+			- proč bílý? 
+				- stejné zastoupení všech frekvencí jako v bílém světle
+					- z podobného důvodu jsou pak další šumy pojmenované podle jiných barev (červený, fialový)
+		- bílý se při syntetickém modelování šumu používá nejčastěji
+	- Impulzní šum (sůl a pepř)
+		- taky aditivní
+		- v realitě ho moc nepotkáme, ale je to častý model
+		- s určitou pravděpodobností je pixel bílý nebo černý, jinak je to pixel původního obrázku 
+	- speckle - úplně přeskakujeme
+- **měření** 
+	- rozptyl - moc nám toho neřekne
+	- signal-to-noise ratio (SNR) 
+		- obecná definice: $$\frac{|F|^2}{|N|^2}(u,v)$$
+			- |F| = amplituda frekvence obrázku
+			- |N| = amplituda šumu v obrázku
+		- doopravdy se ale počítá dle vzorečku z akustiky $$SNR = 10 \log_{10}(D(f)/D(n))$$
+			- \[dB]
+			- je to speciální případ té obecné definice pro bílý a nekorelovaný šum
+		- SNR = 0dB (šum je stejně silný jako obrázek)
+		- čím větší SNR tím lepší kvalita obrázku
+- POZN: histogram zašumněného obrázku (gaussovským šumem)
+	- je to konvoluce gaussovky s histogramem obrázku
+		- obecně to je konvoluce s distribucí šumu
+#### Metody odstraňování šumu
+- **průměrování v čase**
+	- nejlepší vůbec -> neodstraňuje detaily (nedegraduje hrany)
+		- všechny ostatní metody odstraňují vysoké frekvence (rozmazávají)
+			- šum je stejně na všech frekvencích ale na vyšších frekvencích je málo dat s vyššími frekvencemi, takže tam je nejhorší SNR
+				- takže na vyšších frekvencích nejvíc vadí
+			- sice odstraníme to nejhorší co ten šum udělá ale také degradujeme obrázek
+	- ale vyžaduje několik záběrů jen s jiným šumem
+		- obrázky musí být zarovnané na sebe (nebo je musíme registrovat)
+	- POZN: na rozdíl od toho dlouhá expozice neprůměruje šum, protože ten vzniká až na snímači
+- **konvoluční filtry**
+	- **průměrování**
+		- POZN: tohle je prostě rozmazávání
+		- odstraňuje šum, ale přicházíme o vysoko-frekvenční informace - čím větší maska tím méně šumu a méně vysokofrekvenčních informací
+	- **průměrování podél hran**
+		- POZN: snaha nerozmazat hrany, jen plochy
+		- najdeme hrany a upravujeme konvoluční filtr tak aby průměroval jen na jedné straně hrany
+		- což ale nejde (jde těžce) protože neumíme najít v zašuměném obrázku najít hrany
+	- **rotující okno**
+		- nelze zapsat jako konvoluce (ale stále je to průměrování)
+		- je tam 8 poloh s různě velkými okolími
+		- najdeme polohu s nejmenším rozptylem a dáme ji do centrálního pixelu
+		- problémy:
+			- je pomalá (používáme min 7x7 masku a opakujeme ji 8x)
+			- vznikají artefakty (tečky velikosti toho okna)
+		- dobrá až na tu pomalost
+	- **bilaterální filtr**
+		- vážíme podle vzdálenosti od centrálního a podle rozdílu v intenzitě
+			- největší váhu mají pixely co jsou blízko a co mají podobnou intenzitu
+				- -> pixely za hranou mají nízkou váhu
+		- podobné jak průměrování podél hran, ale nepotřebujeme vědět kde přesně jsou hrany
+	- **non-local means filter**
+		- průměrování přes **všechny** pixely s váhou která je dána podobností okolí
+			- POZN: nevážíme prostorově ani intenzitou ale jen podobností okolí
+		- nejbězněji používaná z jednodušších metod
+		- slavná implementace BM3D
+		- velmi pomalá (minuty na obrázek 512x512)
+			- existuje spousta hacků jak to zrychlit, ale získají o něco horší výsledek
+	- **hladký low-pass filter ve frekvenční oblasti** - self-explanatory
+- **nelineární filtry** (např pro impulzní šum, ale lze použít i pro gauss)
+	- filtry závislé na pořadí (rank filters)
+		- **medián** - vezme prostřední hodnotu
+			- odfiltrujeme extrémní hodnoty<img src="attachments/Pasted image 20260119182738.png" width="500px">
+			- nebude fungovat když na šum převládá nad signálem<img src="attachments/Pasted image 20260119183420.png" width="500px">
+			- rovné hrany zachová, ale okusuje rohy (větší masky okusují víc)
+			- fast median filtering
+				- $O(nc)$ - $n$ je velikost obrázku, $c$ je počet barev
+					- -> lineární vůči velikosti obrázku
+				- stejně pomalejší než konvoluce
+			- nelze dělat po pásmech u barevných - musíme převézt do jiného barevného prostoru a použít třeba jen intenzitu (předpokládáme že hue, ... není zas tak zašuměné)
+	- ostatní nepřežili - jako průměr několika nejblíž mediánu, výběr maxima ...
+- **minimalizace funkcionálu**
+	- jak volit aproximující plochy a parametry jak moc interpolovat vs aproximovat
+	- vsuvka - jak z špatně podmíněné úlohy udělat dobře podmíněnou (z nekonečně mnoho řešení udělat 1 nebo aspoň konečně mnoho řešení)
+		- snažíme se najít aproximaci funkce z několika zadaných bodů
+		- dáme si omezení že $f(x_i) = y_i$
+		- z nekonečně mnoha řešení si to omezíme na řešení které minimalizuje $\int f^{\prime\prime^2}dx$
+		- ale to omezení že se musí rovnat není realistické, takže se ten rozdíl budeme snažit aspoň minimalizovat (kde $\lambda$ je **regularizační člen** - zda chceme více denoising nebo větší přesnost k původnímu obrázku) $$\sum (f(x_i)-y_i)^2 + \lambda \int f^{\prime\prime^2}dx$$
+			- první člen $(f(x_i)-y_i)^2$ nám zajišťuje aby se hodnota pixelu až příliš nelišila od původní
+			- druhý člen $\lambda \int f^{\prime\prime^2}dx$ nám říká něco ve stylu jak moc je to hladké
+				- POZN: spousta výzkumu řeší optimalizaci toho $\lambda$ parametru
+	- POZN: do doby hlubokého učení tohle byly nejlepší metody (i když jsou pomalé)
+### Detekce a zvýraznění hran
+- POZN: sama detekce hran už není preprocessing (výstup není obrázek, ale informace o hranách, která se jen jako obrázek vizualizuje)
+#### Jednoduché metody pro zaostřování
+- lidský mozek umí dobře doplnit nízko frekvenční informaci, ale ne vysoko frekvenční! - proto je důležité aby měl obrázek ostré hrany
+	- experiment - nakreslený trojúhelník má vysokofrekvenční informaci v rozích
+		- když odebereme středy úseček v trojúhelníku - skoro všichni řeknou, že to je stále trojúhelník
+		- když odebereme rohy a necháme jen středy úseček - už je to sporné, někdo vidí trojúhelník, někdo šesti úhelník, někdo jen 3 přímky
+- ostrost hrany vnímáme v tom jaký je rozdíl mezi spodní a horní hladinou a strmostí hrany
+	- když to trochu přeženeme oběma směry, tak to pak vypadá ostřeji. Ale nesmí se to přehnat moc!
+	- <img src="attachments/Pasted image 20260119191157.png" width="300px">
+	- Přeostřený obrázek:<img src="attachments/Pasted image 20260119191116.png" width="700px">
+- **unsharp masking**
+	- šlo již ve fotokomoře
+		- vezmu původní mínus rozostřený původní -> dostanu g
+			- g je ta vysokofrekvenční informace o přechodech hran
+		- původní obrázek plus $\alpha$ krát g -> získám zaostřený obrázek
+	- takhle se to v digitálním zpracování již nedělá
+	- neostré maskování - Laplace
+		- POZN: tady není nic neostrého, je to jen z toho co se dělalo ve fotokomoře
+		- Laplace operátor - využijeme že podobného efektu dosáhneme druhou derivací:$$\nabla^2 f = \frac{\partial^2 f}{\partial x^2}+\frac{\partial^2 f}{\partial y^2}$$
+			- $\nabla^2f$ jsou hrany / detaily 
+			- Odečteme jako při unsharp masking: $f - \alpha \nabla^2 f$
+		- numericky
+			- první derivace
+				- $f(x_O+1)-f(x_O)$
+					- $(-1, 1)$
+			- druhá derivace
+				- $(1, -2, 1)$
+				- ve 2D matice A
+					- 0, 1, 0
+					- 1, -4, 1
+					- 0, 1, 0
+			- f si představíme jako matici B, které má všude 0, kromě středu
+				- $B-\alpha A$ (kde alpha je zde 1)
+					- 0 -1 0
+					- -1 5 -1
+					- 0 -1 0
+				- nebo alternativně se na to můžeme podívat z pohledu unsharp masking
+					- matice A (specificky vybraná, může vypadat i jinak)
+						- 0, 1, 0
+						- 1, 1, 1
+						- 0, 1, 0
+					- $B- \alpha A$ (kde alpha je zde 1/5)
+						- 0 -1 0
+						- -1 5 -1
+						- 0 -1 0
+					- => jak pomocí Laplace tak unsharp masking dostaneme stejný výsledek
+	- POZN: brutálně se rozbije když v obrázku bude šum - ještě ho to zhorší
+#### Detektory hran
+<img src="attachments/Pasted image 20260119195608.png" width="300px">
+
+- gradient obrázku - ukazuje ve směru nejrychlejší změny intenzity$$\nabla f = \left[ \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right]$$<img src="attachments/Pasted image 20260119200010.png">
+- **založené na 1. derivaci**
+	- aproximují první derivaci - detekují jak moc se nám mění intenzita v jednom směru
+	- velký problém s šumem - 1. derivace ho zveličí<img src="attachments/Pasted image 20260119194815.png" width="300px">
+	- hledáme maxima
+	- **ROBERTS**
+		- 2 masky
+			- 1 0
+			- 0 -1
+		- druhá je rotace o 90 stupňů
+	- **PREWITT**
+		- 2 masky
+			- 1 1 1
+			- 0 0 0
+			- -1 -1 -1
+		- druhá je rotace o 90 stupňů
+	- **SOBEL**
+		-  2 masky
+			- 1 2 1
+			- 0 0 0
+			- -1 -2 -1
+		- druhá je rotace o 90 stupňů
+	- **CANNY**
+		- stejná myšlenka jako předchozí, ale více kroků aby potlačil šum
+			1. obraz se vyhladí gausem $f*G$ - rozmaže 
+			2. spočítají se derivace $(f*G)'$ - Sobel
+			3. hledání maxim
+				- maximum = kandidát na hranu
+			4. prahování - prahy T1, T2
+				- \>T2 = hrana
+				- <T2 & >T1 = hrana, jen soused hrany
+		- detekuje hrany jako 1 pixel, ne jako pás
+			- jedna hran = jedna odezva
+			- přesná lokalizace hran
+		- má spoustu uživatelských parametrů
+- **založené na 2. derivaci**
+	- hledáme přechody z vysokých do nízkých hodnot - zero crossing
+	- ještě větší problém se šumem (nelze bez potlačení!)
+	- **MARR**<img src="attachments/Pasted image 20260119200330.png">
+		- použijeme zase gauss (rozmažeme)
+			- laplace z gaussovky (LoG) - najdeme gradienty
+		- parametry jsou velikost gaussovky (sigma)
+		- velmi dobře napojuje hrany (až moc dobře)
+			- vybírá celky
+- **whitening** - není moc dobrý, ale také to je detektor hran
+- **moderní**
+	- síť se naučí na manuálně anotovaných datech
+		- pomalé a neefektivní
+		- problém když není trénovaná na datech na kterých to chceme používat (např trénink na outdoor fotkách, ale chceme to použít na fotky z mikroskopů)
+	- síť se naučí na výstupech jednodušších detektorů hran jako Canny
+		- přebírá chyby od Canny
+## Image restoration
+- snaží se matematicky modelovat degradaci a invertovat ji
+- na rozdíl od image enhancement to není heuristika
+- **image degradation model**
+	- aliasing
+	- blur+noise
+	- geometric degradations
+### Chyby intenzit - blur+noise
+- **příčiny**
+	- camera shake/motion
+		- třes ruky (údajně 95% rozmazaných snímků vznikne tímto způsobem)
+	- scene/object motion
+	- wrong focus
+		- často i v profesionální či věděcké oblasti (fyzické limitace např mikroskopu, atmosféry, ...)
+		- zjistíme, že chceme zaostřit na něco jiného až potom co to vyfotíme - forenzní využití
+	- medium turbulence
+		- mlha, atmosféra, pod vodou
+- **general space variant blur model**
+	- konvoluce kde se mění velikost masky
+- **simplified space variant blur model**
+	- v něm se předpokládá, že se velikost masky nemění (pro zjednodušení)
+		- např. plochá scéna, konstantní pohyb
+	- Fancy vzoreček:$$z(x) = [h \ast u](x)+n(x)$$
+	- $\ast$ operátor konvoluce
+	- $u(x)$ je původní (čistý) obrázek
+	- $n(x)$ je aditivní šum
+	- $h(x)$ je PSF (**point spread function**)
+		- řekne nám jak se rozleze jeden izolovaný pixel do ostatních
+		- jinak řečeno, jak jednomu pixelu na výstupu přispějí ostatní pixely
+		- u camera shake
+			- je to trajektorie pohybu (světlejší tam kde jsme byli déle)
+		- out of focus
+			- NENÍ to gaussovka
+			- je to kolečko konstatní intenzity (případně tvar aparatury -> když budeme mít částečně otevřenou tak to bude mnohoúhelník)
+		- turbulence (impulzní odezva)
+			- rozmazaný flek - je to gaussovka
+- problém šumu
+	- i kdybychom měli přesnou PSF, tak nemůžeme provést inverzi, protože nám to šum znemožní
+		- snažili bychom se invertovat ten šum -> nedopadne dobře
+	- -> musíme se šumu zbavit (denoising)
+	- v praxi
+		- nejspíš neznáme přesně ani PSF a je tam šum
+		- i kdyby tomu tak nebylo tak bychom stejně neměli jednoznačně dané uzávorkování toho rozmazání (v jakém pořadí k němu došlo)
+			- i kdyby jsme je našli přesně, tak nemůžeme matematicky najít jaký je rozptyl při dekonvoluci (vědět kdy se zastavit)<img src="attachments/Pasted image 20260119203827.png">
+				- musíme si tam přidat naše preference (to ale nemusí být ten skutečný obrázek)
+					- ty budou záležet na tom co víme jistě viz. kategorie
+#### Restoration categories 
+- **PSF známá** (PSF je ve vzorcích H)
+	- žádný šum
+		- $G = F\cdot H$
+			- Provodeme inverzní Fourierku: $F^{-1}(G/H)$
+				- minimalizujeme rozdíl od modelu
+	- se šumem
+		- $G = F\times H + N$
+		- Pokud provodeme inverzní Fourierku: $F^{-1}(G/H + G/N)$<img src="attachments/Pasted image 20260119204609.png">
+			- akorát zvýrazníme ten šum
+		- **Wiener filter**
+			- Cílem je tato minimalizace: $E(||f' - f||^2) \rightarrow min$ 
+				- takže hledáme obrázek $f'$, který je co neblíže původnímu $f$ 
+				- minimalizujeme rozdíl od modelu s regularizačním členem
+			- hledáme takový filter, který když vezmu ten obrázek zašumněný, tak chci aby ta norma pro všechny ty instance těch možných lineárních filtrů byla minimalizovaná
+			- Právě to filtr umí:
+				- $F' = R \times G$
+					- spektrum výsledného obrázku $F'$ bude Wiener filter transfer function $R$ krát spektrum degradovaného obrázku $G$
+				- Wiener filter transfer function: $$R = \frac{1}{H} \times \frac{|H|^2}{|H|^2 + S_n/S_f}$$
+					- zachycuje myšlenku: pokud je frekvence hodně poškozená rozmazáním (reprezentováno $|H|^2$) nebo šumem (reprezentováno $SNR^{-1}$) tak ji chceme odfiltrovat
+					- $\frac{1}{H}$ je prostě inverzní filtrování
+					- $H$ je SPF, $|H|^2$ je power spektrum SPF
+						- $|H|^2$ nám vlastně říká jak moc byla která frekvence ovlivněna rozmazáním (1 = beze změny, 0 = úplně zničena)
+					- $S_n/S_f = SNR^{-1}$ - čím blíže k 0 je tím je zlomek bližší k 1 a celé se to přibližuje k jednoduchému inverznímu filtrování
+				- musíme ale vědět to $SNR^{-1}$ (signal to noise ratio, ale převrácená hodnota)
+					- když ho podhodnotíme tak bude stále rozmazané
+					- když přehodnotíme tak se zase zvýrazní šum
+
+			- většinou nemáme PSF, ale když máme tak je velmi dobrý 
+				- využilo se u Hublova teleskopu, měli hvězdy jako bodové zdroje, ze kterých bylo možné spočítat PSF
+	- odhad PSF
+		- první nápad
+			- dvě kamery, jedna s rychlým vzorkováním
+				- z rozdílu mezi obrázky z té rychlé odhadneme PSF
+		- v chytých telefonech 
+			- akcelerometr a gyroskop
+- **PSF je konstantní a známe parametrický tvar**
+	- ze spektra
+		- z nulových bodů ve spektru se dá odhadnout tvar PSF<img src="attachments/Pasted image 20260119214700.png" width="500px">
+			- předpokládáme, že vznikly z toho rozmazání a ne že byly v původním obrázku
+			- algoritmus který rozumně rychle odhadne rychlost a směr rozmazání ze spektra způsobeného lineárním pohybem
+				- změříme směrové průměry ze všech stran a najdeme profil pixelů kde jsou největší peaky (dolů)
+- **PSF je konstantí, ale neznámá**
+	- problém není jednoznačně zadán
+	- převedu na minimalizační problém
+		- funkcionál s dvěma regularizačními členy, které udávají naší preferenci, jak očekáváme, že bude obrázek vypadat
+			- střídavě minimalizujeme jeden pak druhý, dokola
+		- nemáme nutně jistotu že najdeme globální minimum
+			- musíme zajistit že regularizační členy a jejich iniciální hodnoty jsou vhodně zvolené
+- **PSF je variabilní a neznámá**
+	- převedeme do jiného souřadnicového systému - rotační pohyb na lineární
+		- v praxi moc nefunguje, protože se do toho dostane i pozadí
+	- můžeme si obrázek rozdělit na sekce kde je PSF přibližně konstantní
+	- můžeme mít z jiného zdroje hloubku a předpokládat, že rozmazání se mění u 3D scén s hloubkou
+#### Multichannel image restoration
+- předpoklady
+	- několik vstupních obrázků stejné scény
+	- rozmazány konvolucí s různými konvolučními maskami
+	- focená scéna se nehne a je statická
+- POZN: empiricky vyzkoušeno - více než 4 obrázky už moc nevylepšují scénu
+	- podstatný skok mezi 1 a 2
+- místo toho abychom měli jednu rovnici s dvěma proměnnými, tak máme k rovnic s k+1 proměnnými (problém je lépe určen)
+- **čím větší rozdíly mezi PSF jednotlivých kanálů (obrázků) tím lepší výsledek**
+- **musíme zajistit, že obrázky jsou registrované**
+	- chytrý krok - přesuneme tu transformaci do toho PSF<img src="attachments/Pasted image 20260119225732.png" width="400px">
+		- hledáme umístění toho PSF ve větší matici
+			- metoda si s tím už poradí (nemusíme ty velké PSF srovnávat přes sebe a extrahovat posunutí)
+- **multi-focus fusion**
+	- předpoklady
+		- několik vstupních obrázků **stejné scény**
+		- víme že každá část obrázku je ostrá na aspoň jednom z obrázků
+	- např. fotografie z mikroskopu
+	- nepoužívá konvoluci
+		- detekuje hrany a vybere části obrázků s maximálními gradienty
+- **super-resolution imaging**
+	- předpoklady
+		- několik vstupních obrázků stejné scény
+		- kamera není 100% statická - **sub-pixel posuny** (například když letí letadlo)
+	- naivní postup (bez blur)
+		- zregistrujeme obrázky (otázka jestli jsme toho schopni)
+		- zvýšíme rozlišení mřížky a využijeme pixely z různých obrázků
+	- realistický postup
+		- zase minimalizujeme funkcionál
+			- přidáváme downsampling / upsampling faktor (uživatelský parametr)
+				- empiricky ověřeno - dávají smysl faktory do 2 
+					- je potřeba přibližně faktor+2 obrázků - většinou jich tolik nemáme
+					- problém nastává s kumulací registračních chyb
+	- lze provádět i na videu
+		- nesmí tam být lokální pohyby
+		- používáme časové okno -> z něj jeden obrázek videa ve vyšším rozlišení
+	- kde se využívá?
+		- nevyužívá se v normálních foťácích
+		- sensory které jsou nativně nízko rezoluční - infračervené
+		- specifické profesní fotografie - unikátní fotografie
+		- forenzní využití
+### Geometrické deformace
+- lens distortion
+	- barrel
+	- pincushion
+	- non standard lens - fish-eye
+#### Image registration
+- článek o tom: http://library.utia.cas.cz/prace/20030125.pdf
+- překrytí více obrázků stejné scény
+	- využívá se při jakémkoliv zpracování sekvence obrázků
+- jeden vybereme jako referenční a ostatní přenášíme na něj
+- cílem je přesnost překrytí - aby měli stejnou geometrii
+	- -> není cílem odstranit geometrické deformace úplně
+- **kategorie**
+	- více pohledů
+	- v různých časech
+	- různé modality
+	- scéna na model
+##### Postup:
+1. **výběr kontrolních bodů** 
+	- v každém obrázku zvlášť, doufáme že bude překryv (že různé obrázky budou mít některé kontrolní body společné)
+	- co se vybírá - musí být invariantní vůči druhu distorze
+		- výrazné body
+		- rohy
+		- čáry
+		- uzavřené plochy
+		- virtuálně nalezené objekty - moc se neosvědčilo
+		- středy oken
+	- vlastnosti
+		- distinktivní a detekovatelné
+		- fyzikální interpretace
+		- rozprostření na obrázku
+		- společné mezi obrázky
+		- robustní vůči degradacím - šum, atd.
+			- problém s detekcí rohů (druhá derivace detekce hran)
+2. **matching kontrolních bodů**
+	- algoritmicky nejsložitější
+	- metody
+		- **signal-based** 
+			- na základě světlostních hodnot pixelů
+			- příklady:
+				- **image correlation**
+					- princip:
+						- mám dva obrázky a jeden posouvám přes druhý a počítám podobnost pomocí normalizované cross-korelace
+					- nemusíme ani předpokládat existenci kontrolních bodů - vybereme okna
+					- hledá kde okno z jednoho obrázku v druhém má největší korelační koeficient
+					- okna vybíráme okolo kandidátů na kontrolní body - ploché hrany nezmatchujeme
+					- umí jen shift, ve trochu složitější verzi i rotaci
+					- **nevadí nám změny kontrastu a jasu - to umožňuje to normování**
+					- POZN: dobře funguje na satelitních snímcích
+					- **je schopen pracovat se zašuměnými obrázky**
+					- nefunguje zas tak dobře na multi-modálních datech
+					- pro zrychlení se to dá upravit na **hledání minima L1 normy** - ihned jak vidíme že hodnoty jsou vysoké pokračujeme na další pixel, protože už víme že existuje menší hodnota (stačí většinou vypočítat jen pár řádků)
+						- L1 norma = manhattanská vzdálenost, prostě součet absolutních hodnot členů
+					- sub-pixel rozlišení - využijeme interpolaci kolem matching pozice
+					- **pyramidová reprezentace**
+						- matchujeme na obrázcích s postupně vyšším rozlišením jen na již matchující pozici
+				- **phase correlation**
+					- vytlačila image correlation
+						- lze využít na **multi-modální data** - musí mít hrany na podobných místech, vůbec neřeší barvy
+						- je mnohem **rychlejší**
+					- postup 
+						- uděláme whitening na obrázky a hledáme korelaci
+						- nebo lépe **nalezneme cross-power spectrum**$$\frac{F.G^*}{|F.G|} = e^{+2\pi i n a}$$
+							- $^*$ je komplexně sdružené číslo 
+							- $a,b$ jsou parametry posunu (ty neznáme)
+							- $F$, $G$ fourierky obou oken (toho, kterým posouváme a toho na které ho pokládáme)
+								- $g(x) = f(x-a)$
+								- $G=F.e^{-2\pi i n a}$ ... shift teorém - předpokládáme že okna se liší jen o posun
+								- $G^*=F^*.e^{+2\pi i n a}$ ... všimněme si že po komplexním sdružením má komplexní jednička kladný exponent
+								- $|G|=|F|$ ... rozdíl jen v násobení komplexní jedničkou
+									- -> $|F|.|G| = |F|^2$
+								- Proč tam je to komplexní sdružení?
+									- $F.G^*=F.F^*.e^{+2\pi i n a}=|F|^2.e^{+2\pi i n a}$ ... dostaneme komplexní jedničku, která přímo kóduje posun
+								- => vidíme že se nám nahoře a dole vykrátí $|F|^2$ a zbude $e^{+2\pi i n a}$
+							- máme $e^{2\pi i n a}$ a víme že **její inverzní fourierka bude delta funkce** $\delta(x-a)$ 
+					- může být horší pokud obrázky jsou ze single modality a je tam málo hran, tak narazíme na to že jsme zahodili ty barvy
+					- stále **problém pokud nejsou korelované hrany** - PET x CT - vyřešeno tím, že oboje měří jeden přístroj a je to HW registrované
+					- bude tam stále šum i přesto že použijeme single-modální data se syntetickým posunem, protože shift teorém platí jen pro periodické prodloužení - to tady nemáme!
+					- *úkol - proč se nám chyby u náhodných obrázků zkorelují na střed na centrum (bude to vypadat že jsou stejně posunuté) - může záležet na obsahu obrázku, je spojené s shift teorém platí jen pro periodické prodloužení*
+					- jak na zrotované a škálované obrázky?
+						- potřebujeme převézt rotaci a scaling na posun
+						- nápad je převézt obrázek do polárních souřadnic
+						- problém je že to stále rozbije scaling a posun
+						- tak použijeme log-polární souřadnice co převádí také scaling na posun
+						- ale posun nám to stále rozbije
+						- místo toho abychom převáděli obrázek do log-polárních, tak převedeme amplitudu FT, která je stejná pro posunuté obrázky -> máme vyhráno
+						- celkový postup je tedy:
+							- vezmeme amplitudu FT - ta je stejná pro posunuté obrázky díky shift teorému (bereme amplitudu takže komplexní jednička zmizí)
+							- amplitudu FT převedeme do log-polárních souřadnic, které převádí jak rotaci, tak škálování na posun
+						- POZN: v praxi funguje dobře jen pro neškálované obrázky, protože při převodu na log-polární souřadnice je brutální scaling, v polárních to není tak hrozné
+		- **feature-based**
+			- na základě popisu nějakých příznaků
+			- využívá se pro obrázky které nemají stejnou modalitu
+			- složité protože nemáme zaručené že stejné body (features) jsou v obou obrázcích
+				- pokud by to tak bylo existovali by jednoduché metody
+					- např: najdu těžiště a nejvzdálenější bod - napáruji s druhým obrázkem -> absolutně nefunguje kvůli outliers
+			- pro match posunu, rotace a scale nám stačí dva body (**uspořádaná dvojice**)
+			- metody:
+				- **kombinatorické** - využívá jen globální informace
+					- vyzkoušíme všechny dvojce bodů - v praxi jen podgraf, protože by to jinak bylo pomalé 
+					- počítání zásahů - koukáme se jak dobře se pak ostatní promítnou na nějaký bod v druhém obrázku
+					- parametr clustering<img src="attachments/Pasted image 20260120072501.png" width="400px">
+						- dvojicím bodů přiřadíme bod v prostoru parametrů (více dimenzí - dimenze pro rotaci, scale, shift)
+						- v místě kde parametry sedí bude v prostoru parametrů kluster
+				- **feature space** - využívá jen lokální informace
+					- hledáme transformaci co minimalizuje vzdálenost mezi body
+					- features
+						- z nějakého kruhového okolí
+						- invariantní vůči degradacím
+						- výrazné, aby se s velkou pravděpodobností ukázalo v obou
+						- odolné vůči šumu
+					- robustní matching
+						- nebrat jen min distance, ale taky jestli není blízko více bodů -potom tam je velká šance se splést<img src="attachments/Pasted image 20260120073258.png">
+							- pokud je blízko více bodů je vysoká nejistota a vybereme radši jiný
+				- **hybridní**
+					- krok1 - najdeme dvojice invariantních příznaků - vybereme jen ty nejspolehlivější!
+					- krok2 - překryjeme obrázky a zbytek namatchujeme v obrazové oblasti
+3. **odhad transformačního modelu**
+	- máme nějaké předpoklady o druhu transformace - odhadujeme parametry
+	- design mapovacích funkcí
+		- globální - podobnost, afinní, projektivní transformace
+			- afinní transformační model
+				- afinní geometrie$$u=a_0+a_1x+a_2y, v=b_0+b_1x+b_2y$$ $$u=s(x\cos \psi - y \sin\phi)+\Delta x$$$$v=s(x\sin \psi + y \cos\phi)+\Delta y$$ 
+					- kde s je scale, $\psi$ je rotace a $\Delta x, \Delta y$ je posun
+					- $s\cos \psi = a, \quad s\sin \psi = b$
+				- umožňuje neisotropní scaling - zvlášť scale v jednom směru
+				- posun, rotace, scale - jak jsme zvyklý
+				- + skew - zachovává přímky
+				- pro určení jednoznačně potřebujeme 3 body (6 parametrů)
+				- když budeme mít více než 3 body, nemusíme je zahazovat a využijeme **least-square fit** - minimalizujeme sumu druhých mocnin odchylek
+					- $\min \sum_{i=1} \{(u_i - (ax_i-by_i)-\Delta x)^2 + ((v_i - (bx_i+ay_i)-\Delta y)^2\}$
+					- druhé mocniny, protože předpokládáme, že chyby mají normální rozložení - to obsahuje druhou mocninu
+					- předpokládáme že jedna osa (souřadnice bodů v jednom z obrázků) jsou správně a chyb jsou jen druhé - lze použít **total least-square fit**, ale většinou se to nedělá
+			- projektivní transformace
+				- projektivní geometrie $$u=\frac{a_0+a_1x+a_2y}{1+c_1x+c_2y}, v=\frac{b_0+b_1x+b_2y}{1+c_1x+c_2y}$$
+					- POZN: to že je jmenovatel stejný nám říká že se zachovávají přímky 
+				- pro určení jednoznačně potřebujeme 4 body (8 parametrů)
+				- také zachovává přímky!
+		- lokální 
+			- nejjednodušší - triangulace na řídících bodech, každý se přetransformuje zvlášť lineání transformací - **piecewise affine**<img src="attachments/Pasted image 20260120075409.png" width="right|200px">
+				- s lineární transformací jsou ale problémy, protože láme na kraji mezi trojúhelníky rohy
+			- místo toho použijeme něco co jsme schopni omezit aby to na krajích navazovalo - **piecewise cubic**
+			- **thin-plate splines**
+				- globání podmínka, ale reálný efekt mají jen body v malém okolí od každého bodu 
+4. **image resampling and transformation**
+	- vypadá jednoduše, ale výpočetně zabírá i třeba 95% času
+		- čím složitější transformační model o to pomalejší
+	- interpolace z neceločíselných souřadnic na celočíselné<img src="attachments/Pasted image 20260120075821.png" width="400px">
+		- nearest neighbor
+		- bilinear
+		- bicubic
+	- **forward x backward**
+		- forward - můžou nám ve výsledném obrázku vzniknout díry!
+		- backward - vždy z plné sítě do plné sítě - žádné díry
+	- měření chyb
+		- řídící body, které jsme nepoužili pro výpočet modelu, můžeme využít k změření přesnosti
+		- vznik chyb:
+			- lokalizační chyba - hned na začátku, špatně vybrané body
+			- matching chyba - nejhorší chyba 
+			- alignment chyba - vybrání moc jednoduchého modelu
+- **využití**:
+	- image fusion
+		- spojení více obrázků stejné scény do jednoho obrázku
+		- multimodální - např. MRI+PET
+	- digital subtraction angiography
+		- medicínské, cévy z rentgenu
